@@ -1,66 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <title>Bar Chart D3</title>
-      <script src="https://d3js.org/d3.v5.min.js"></script>
-      <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-      <script src="https://d3js.org/topojson.v2.min.js"></script>
-      <!-- <script src="http://d3js.org/topojson.v2.min.js"></script>
-      <script src="https://unpkg.com/topojson-client@3"></script> -->
-      <style type="text/css">
-        body{
-          margin_bar: 0;
-        }
-
-        svg {
-          border: 1px solid rgb(206, 205, 205)
-        }
-
-        svg .myrect {
-            fill: steelblue;
-            stroke-width: 0px;
-        }
-        svg .myrect:hover {
-            fill: red;
-        }
-
-        .all-states {
-          fill: none;
-        }
-
-        .state:hover {
-          fill: red;
-        }
-
-        .state-border {
-          fill: none;
-          stroke: #fff;
-          stroke-linejoin: round;
-        }
-      </style>
-  </head>
-  <body>
-    <div id='container'>
-      <div id='bar-container'>
-        <svg id='svg-bar'></svg>
-      </div>
-      <div id='chor-container'>
-        <svg id='svg-chor'></svg>
-      </div>
-    </div>
-
+    <title>Agri Losses 2015</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/topojson.v2.min.js"></script>
     <script type="text/javascript">
       var myMasterData;
       var myBarData;
       var myChorData;
+
+      var svgWidth_bar = 600
+      var svgHeight_bar = 600
       var margin_bar = {top: 10, right: 10, bottom: 40, left: 140};
-      var svgWidth_bar = 950
-      var svgHeight_bar = 700
       var gWidth_bar = svgWidth_bar - margin_bar.left - margin_bar.right;
       var gHeight_bar = svgHeight_bar - margin_bar.top - margin_bar.bottom;
+
+      var svgWidth_chor = 980
+      var svgHeight_chor = 600
       var margin_chor = {top: 10, right: 10, bottom: 40, left: 140};
-      var svgWidth_chor = 950
-      var svgHeight_chor = 700
       var gWidth_chor = svgWidth_chor - margin_chor.left - margin_chor.right;
       var gHeight_chor = svgHeight_chor - margin_chor.top - margin_chor.bottom;
 
@@ -73,13 +31,12 @@
             generateBarData(myMasterData, null)   // master data and item to filter
             createBarChart(myBarData);
             generateChorData(myMasterData, null)
-            showMap(myChorData)
+            createMap(myChorData)
           }
         );
       }
       
       function generateBarData(masterData, state) {
-        console.log(state + "  State Bar Chart \n")
 
         if(state === 'all' || state === 'All' || state === null){
           myBarData = d3.nest()
@@ -103,22 +60,17 @@
                       .sort(function(a, b){ return d3.ascending(a.values, b.values); });
           myBarData.sort(function (a, b) {return a.value - b.value;})
         }
-        // console.log("BARCHART DATA \n")
-        // console.log(myBarData)
       }
 
       function generateChorData(masterData, type) {
-          // console.log(type)
         if(type === null || type === 'All' || type === 'all'){
           myChorData = d3.nest()
                       .key(function(d) { return d.State_Code;})
                       .rollup(function(d) { 
                         return d3.sum(d, function(g) {return g.Amount; });
                       })
-                      // .entries(masterData)
                       .entries(masterData)
                       .sort(function(a, b){ return d3.ascending(a.values, b.values); });
-          // myChorData.sort(function (a, b) {return a.value - b.value;})
         }else{
           myChorData = d3.nest()
                       .key(function(d) { return d.State_Code;})
@@ -126,15 +78,7 @@
                         return d3.sum(d, function(g) {return g.Amount; });
                       })
                       .entries(masterData.filter(function(d) {return d.Damage_Descp === type;}))
-                      // .sort(function(a, b){ return d3.ascending(a.values, b.values); });
-          // myChorData.sort(function (a, b) {return a.value - b.value;})
         }
-        // console.log("CHOR CHART DATA\n")
-        myChorData.filter(function(d,i) {
-          // console.log(d.key, d.value)
-          // console.log(d.value)  
-          return null})
-      //   console.log(myChorData)
       }
 
       function removeBarChart(){
@@ -143,27 +87,25 @@
       }
 
       function createBarChart(chartData) {
-        // console.log(chartData)
         var svg = d3.select("#svg-bar")
-                    .attr("width", svgWidth_bar)
-                    .attr("height", svgHeight_bar)
-                    .append("g")
-                    .attr("id", "svg_bar_g")
-                    .attr("width", gWidth_bar)
-                    .attr("height", gHeight_bar)
-                    .attr("transform", `translate(${margin_bar.left},${margin_bar.top})`);
+                  .attr("width", svgWidth_bar)
+                  .attr("height", svgHeight_bar)
+                  .append("g")
+                  .attr("id", "svg_bar_g")
+                  .attr("width", gWidth_bar)
+                  .attr("height", gHeight_bar)
+                  .attr("transform", `translate(${margin_bar.left},${margin_bar.top})`);
 
         // generate scales
         var yScale = d3.scaleBand()
-                              .domain(chartData.map( function(d) 
-                                { return d.key;
-                                }))
-                              .range([0, gHeight_bar])
-                              .paddingInner(0.15);
+                      .domain(chartData.map( function(d) 
+                        { return d.key; }))
+                      .range([0, gHeight_bar])
+                      .paddingInner(0.15);
 
         var xScale = d3.scaleLinear()
-                              .domain([0, d3.max(chartData, function(d) { return (d.value/1000000); })])
-                              .range([0, gWidth_bar]);
+                      .domain([0, d3.max(chartData, function(d) { return (d.value/1000000); })])
+                      .range([0, gWidth_bar]);
 
         // generate axis
         svg.append("g")
@@ -171,7 +113,6 @@
             .call(d3.axisLeft(yScale));
 
         svg.append("g")
-            //.attr("transform", "translate(" + (svgWidth_bar) + ")")
             .attr("transform", "translate("+ (20) +"," + (gHeight_bar) + ")")
             .call(d3.axisBottom(xScale));
 
@@ -192,31 +133,26 @@
               })
             .attr("width", function(d, i)
               {
-                // console.log("i: "+i+"  W: "+xScale(d.value/1000000));
                 return xScale(d.value/1000000)
               })
             .attr("class", "myrect")
             .on("mouseover", function(d) {
-                // console.log(d.key)
               generateChorData(myMasterData,d.key)
-              showMap(myChorData);
+              createMap(myChorData);
             })
             .on("mouseout", function(d) {
-                // console.log(d.key)
               generateChorData(myMasterData,null)
-              showMap(myChorData);
+              createMap(myChorData);
             })
       }
       
-      function showMap(myChorData){
-        const mapWidth = 960
-        const mapHeight = 600
+      function createMap(myChorData){
+        const mapWidth = svgWidth_chor
+        const mapHeight = svgHeight_chor
 
         var svg = d3.select("#svg-chor")
             .attr("width",mapWidth)
             .attr("height",mapHeight);
-
-        //var idFormat = new format("dd")
 
         var losses = d3.map();
         myChorData.map(function(d,i) { 
@@ -236,8 +172,8 @@
             .range(d3.schemeBlues[9]);
 
         var colorQ = d3.scaleQuantize()
-        .domain(1,10)
-        .range(d3.schemeBlues[9]);
+            .domain(1,10)
+            .range(d3.schemeBlues[9]);
 
 // ============== LEGEND =================== //
         var g = svg.append("g")
@@ -270,7 +206,7 @@
                 .tickSize(13)
                 .tickFormat(function(x, i) { return i ? x : x + "M"; })
                 .tickValues(color.domain()))
-            .select(".domain")
+                .select(".domain")
                 .remove();
 // ============== END LEGEND =================== //
 
@@ -297,7 +233,6 @@
                   .enter().append("path")
                   .attr("class","state")
                   .on("mouseover", function(d) {
-                      console.log("State ID: "+d.id + " Amount: "+d.amount)
                       removeBarChart()
                       generateBarData(myMasterData, d.id);
                       createBarChart(myBarData)
@@ -315,6 +250,77 @@
         }
       
       window.onload = loadData;
-  </script>
+
+    </script>
+    <style type="text/css">
+
+      body{
+        margin: 0
+      }
+
+      #title{
+        width: 100%;
+        font-style: italic;
+        font-weight: bold;
+        align-content: center;
+        text-align:center;
+        color: rgb(6, 6, 82);
+        margin-top: 4px;
+      }
+
+      #container{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: center
+      }
+
+      #chor-container {
+        display: flex;
+        max-width: 60%;
+      }
+
+      #bar-container {
+        display: flex;
+        max-width: 40%;
+      }
+
+      svg {
+        border: 1px solid rgb(206, 205, 205)
+      }
+
+      svg .myrect {
+          fill: steelblue;
+          stroke-width: 0px;
+      }
+      svg .myrect:hover {
+          fill: red;
+      }
+
+      .all-states {
+        fill: none;
+      }
+
+      .state:hover {
+        fill: red;
+      }
+
+      .state-border {
+        fill: none;
+        stroke: #fff;
+        stroke-linejoin: round;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='title'><h2>US Agricultural Lossess in 2015</h2></div>
+    <div id='container'>
+      <div id='chor-container'>
+        <svg id='svg-chor'></svg>
+      </div>
+      <div id='bar-container'>
+        <svg id='svg-bar'></svg>
+      </div>
+    </div>
   </body>
 </html>
