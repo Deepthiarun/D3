@@ -18,9 +18,6 @@
           border: 1px solid red;
         }
 
-        svg .state:hover{
-          fill: red;
-        }
         svg .myrect {
             fill: steelblue;
             stroke-width: 0px;
@@ -29,14 +26,14 @@
             fill: red;
         }
 
-      .counties {
+      .all-states {
         fill: none;
       }
-        .county:hover {
+        .state:hover {
         fill: red;
         }
 
-      .states {
+      .state-border {
         fill: none;
         stroke: #fff;
         stroke-linejoin: round;
@@ -111,13 +108,12 @@
                         .sort(function(a, b){ return d3.ascending(a.values, b.values); });
             myBarData.sort(function (a, b) {return a.value - b.value;})
           }
-          console.log("BARCHART DATA \n")
-          console.log(myBarData)
+          // console.log("BARCHART DATA \n")
+          // console.log(myBarData)
         }
 
         function generateChorData(masterData, type) {
-            console.log(type)
-          
+            // console.log(type)
           if(type === null || type === 'All' || type === 'all'){
             myChorData = d3.nest()
                         .key(function(d) { return d.State_Code;})
@@ -132,15 +128,15 @@
             myChorData = d3.nest()
                         .key(function(d) { return d.State_Code;})
                         .rollup(function(d) { 
-                          return d3.sum(d, function(g) {return g.Amount; });masterData.filter(function(d) {return d.Damage_Descp === type;})
+                          return d3.sum(d, function(g) {return g.Amount; });
                         })
-                        .entries()
+                        .entries(masterData.filter(function(d) {return d.Damage_Descp === type;}))
                         // .sort(function(a, b){ return d3.ascending(a.values, b.values); });
             // myChorData.sort(function (a, b) {return a.value - b.value;})
           }
-          console.log("CHOR CHART DATA\n")
+          // console.log("CHOR CHART DATA\n")
           myChorData.filter(function(d,i) {
-            console.log(d.key, d.value)
+            // console.log(d.key, d.value)
             // console.log(d.value)  
             return null})
         //   console.log(myChorData)
@@ -205,121 +201,132 @@
                 })
               .attr("class", "myrect")
               .on("mouseover", function(d) {
-                  console.log(d.key)
-                //generateChorData(myMasterData,d.key)
+                  // console.log(d.key)
+                generateChorData(myMasterData,d.key)
                 //showMap(myChorData);
               })
         }
         
         function showMap(myChorData){
+            const mapWidth = 960
+            const mapHeight = 600
 
-const mapWidth = 960
-const mapHeight = 600
+                // var svg = d3.select("#svg-chor"),
+                //     width = +svg.attr("width"),
+                //     height = +svg.attr("height");
 
-    // var svg = d3.select("#svg-chor"),
-    //     width = +svg.attr("width"),
-    //     height = +svg.attr("height");
+                var svg = d3.select("#svg-chor")
+                    .attr("width",mapWidth)
+                    .attr("height",mapHeight);
 
-    var svg = d3.select("#svg-chor")
-        .attr("width",mapWidth)
-        .attr("height",mapHeight);
+                var losses = d3.map();
+                console.log("BEFORE FILTER")
+                console.log(myChorData)
+                console.log(losses)
 
-    var losses = d3.map();
-    console.log("BEFORE FILTER")
-    console.log(myChorData)
-    console.log(losses)
+                myChorData.map(function(d,i) { losses.set(d.key, d.value); })
 
-    // myChorData.map(function(d,i) { losses.set(d.key, d.value); })
-
-console.log("AFTR FILTERED")
-console.log(losses)
+            console.log("AFTR FILTERED")
+            console.log(losses)
 
 
-    var path = d3.geoPath();
+                var path = d3.geoPath();
 
-    var x = d3.scaleLinear()
-        .domain([20, 27])
-        .rangeRound([500, 860]);
+                var x = d3.scaleLinear()
+                    .domain([11,20])
+                    .rangeRound([500, 860]);
 
-    // var color = d3.scaleThreshold()
-    //     .domain(d3.range(20, 60))
-    //     .range(d3.schemeBlues[9]);
+                var color = d3.scaleThreshold()
+                    .domain(d3.range(12, 20))
+                    .range(d3.schemeBlues[9]);
 
-        var color = d3.scaleQuantize()
-        .domain(1000000,50000000000)
-        .range(d3.schemeBlues[9]);
+                var colorQ = d3.scaleQuantize()
+                .domain(1,10)
+                .range(d3.schemeBlues[9]);
 
-    var g = svg.append("g")
-        .attr("class", "key")
-        .attr("transform", "translate(0,40)");
+// ============== LEGEND =================== //
+                var g = svg.append("g")
+                        .attr("class", "key")
+                        .attr("transform", "translate(0,40)");
 
-    g.selectAll("rect")
-    .data(color.range().map(function(d) {
-        d = color.invertExtent(d);
-        if (d[0] == null) d[0] = x.domain()[0];
-        if (d[1] == null) d[1] = x.domain()[1];
-        return d;
-        }))
-    .enter().append("rect")
-        .attr("height", 8)
-        .attr("x", function(d) { return x(d[0]); })
-        .attr("width", function(d) { return x(d[1]) - x(d[0]); })
-        .attr("fill", function(d) { return color(d[0]); });
+                    g.selectAll("rect")
+                    .data(color.range().map(function(d) {
+                        d = color.invertExtent(d);
+                        if (d[0] == null) d[0] = x.domain()[0];
+                        if (d[1] == null) d[1] = x.domain()[1];
+                        return d;
+                        }))
+                    .enter().append("rect")
+                        .attr("height", 8)
+                        .attr("x", function(d) { return x(d[0]); })
+                        .attr("width", function(d) { return x(d[1]) - x(d[0]); })
+                        .attr("fill", function(d) { return color(d[0]); });
 
-    g.append("text")
-        .attr("class", "caption")
-        .attr("x", x.range()[0])
-        .attr("y", -6)
-        .attr("fill", "#000")
-        .attr("text-anchor", "start")
-        .attr("font-weight", "bold")
-        .text("Unemployment rate");
+                    g.append("text")
+                        .attr("class", "caption")
+                        .attr("x", x.range()[0])
+                        .attr("y", -6)
+                        .attr("fill", "#000")
+                        .attr("text-anchor", "start")
+                        .attr("font-weight", "bold")
+                        .text("Unemployment rate");
 
-    g.call(d3.axisBottom(x)
-        .tickSize(13)
-        .tickFormat(function(x, i) { return i ? x : x + "%"; })
-        .tickValues(color.domain()))
-    .select(".domain")
-        .remove();
+                    g.call(d3.axisBottom(x)
+                        .tickSize(13)
+                        .tickFormat(function(x, i) { return i ? x : x + "M"; })
+                        .tickValues(color.domain()))
+                    .select(".domain")
+                        .remove();
+// ============== END LEGEND =================== //
 
-    var promises = [
-    d3.json("https://d3js.org/us-10m.v1.json"),
-    // d3.json("https://raw.githubusercontent.com/Deepthiarun/Vega/master/us-10m.json"),
-    //   d3.tsv("https://raw.githubusercontent.com/Deepthiarun/Vega/master/unemp.tsv", function(d) { unemployment.set(d.id, +d.rate); })
-    d3.tsv("https://raw.githubusercontent.com/Deepthiarun/Vega/master/unemployment-states.tsv", function(d) { losses.set(d.id, d.rate); })
-    ]
+                var promises = [
+                d3.json("https://d3js.org/us-10m.v1.json"),
+                // d3.json("https://raw.githubusercontent.com/Deepthiarun/Vega/master/us-10m.json"),
+                //   d3.tsv("https://raw.githubusercontent.com/Deepthiarun/Vega/master/unemp.tsv", function(d) { unemployment.set(d.id, +d.rate); })
+                // d3.tsv("https://raw.githubusercontent.com/Deepthiarun/Vega/master/unemployment-states.tsv", function(d) { losses.set(d.id, d.rate); })
+                ]
 
-    Promise.all(promises).then(ready)
+                Promise.all(promises).then(ready)
 
-    function ready([us]) {
-        console.log(us)
-    svg.append("g")
-        .attr("class", "counties")
-        .selectAll("path")
-        .data(topojson.feature(us, us.objects.states).features)
-        .enter().append("path")
-        .attr("class","county")
-        .on("mouseover", function(d) {
-            removeBarChart()
-            generateBarData(myMasterData, d.id);
-            createBarChart(myBarData)
-              })
-        .on("mouseout", function(d) {
-    removeBarChart()
-    generateBarData(myMasterData, null);
-    createBarChart(myBarData)
-        })
-        .attr("fill", function(d) { return color(d.amount = losses.get(d.id)); })
-        .attr("d", path)
-        .append("title")
-        .text(function(d) { return "ID: "+ d.id + " Amount: " + d.amount ; });
+                function ready([us]) {
+                    console.log(us)
 
-    svg.append("path")
-        .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-        .attr("class", "states")
-        .attr("d", path);
-    }
-}
+                  // Country Border line
+                svg.append("path")
+                    .attr('stroke',"#000")
+                    .attr("stroke-width", 1)
+                    .attr("class", "country-border")
+                    .attr("d", path(topojson.feature(us, us.objects.nation)));
+
+                // Satate border lines
+                  svg.append("path")
+                    .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+                    .attr("class", "state-border")
+                    .attr("d", path);
+
+                // indivual states
+                var state_g = svg.append("g")
+                    state_g.selectAll("path")
+                    .data(topojson.feature(us, us.objects.states).features)
+                    .enter().append("path")
+                    .attr("class","state")
+                    .on("mouseover", function(d) {
+                        console.log("State ID: "+d.id + " Amount: "+d.amount)
+                        removeBarChart()
+                        generateBarData(myMasterData, d.id);
+                        createBarChart(myBarData)
+                          })
+                    .on("mouseout", function(d) {
+                        removeBarChart()
+                        generateBarData(myMasterData, null);
+                        createBarChart(myBarData)
+                    })
+                    .attr("fill", function(d) { return color((d.amount = losses.get(d.id))/10000000); })
+                    .attr("d", path)
+                    .append("title")
+                    .text(function(d) { return "State ID: "+ d.id + " Amount: " + d.amount ; });
+                }
+          }
     
     window.onload = loadData;
     </script>
