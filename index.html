@@ -80,6 +80,7 @@
       
       function generateBarData(masterData, state) {
         console.log(state + "  State Bar Chart \n")
+
         if(state === 'all' || state === 'All' || state === null){
           myBarData = d3.nest()
                       .key(function(d) { return d.Damage_Descp;})
@@ -90,6 +91,9 @@
                       .sort(function(a, b){ return d3.ascending(a.values, b.values); });
           myBarData.sort(function (a, b) {return a.value - b.value;})
         }else{
+          if(state < 10){
+            state = state.replace(/^0+(?!\.|$)/, '')   // removing leading 0 from state code
+          }
           myBarData = d3.nest()
                       .key(function(d) { return d.Damage_Descp;})
                       .rollup(function(d) { 
@@ -212,10 +216,15 @@
             .attr("width",mapWidth)
             .attr("height",mapHeight);
 
-        var idFormat = new format("dd")
-        
+        //var idFormat = new format("dd")
+
         var losses = d3.map();
-        myChorData.map(function(d,i) { losses.set(d.key, d.value); })
+        myChorData.map(function(d,i) { 
+          if(d.key > 10){
+          losses.set(d.key, d.value); 
+          }else{
+            losses.set(("0"+d.key).slice(-2), d.value); 
+          }})
         var path = d3.geoPath();
 
         var x = d3.scaleLinear()
@@ -265,52 +274,47 @@
                 .remove();
 // ============== END LEGEND =================== //
 
-            var promises = [
-              d3.json("https://d3js.org/us-10m.v1.json"),
-            ]
-
+            var promises = [d3.json("https://d3js.org/us-10m.v1.json")] 
             Promise.all(promises).then(ready)
-
             function ready([us]) {
-            console.log(us)
+              // Country Border line
+                svg.append("path")
+                  .attr('stroke',"#000")
+                  .attr("stroke-width", 1)
+                  .attr("class", "country-border")
+                  .attr("d", path(topojson.feature(us, us.objects.nation)));
 
-            // Country Border line
-              svg.append("path")
-                .attr('stroke',"#000")
-                .attr("stroke-width", 1)
-                .attr("class", "country-border")
-                .attr("d", path(topojson.feature(us, us.objects.nation)));
+              // Satate border lines
+                svg.append("path")
+                  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+                  .attr("class", "state-border")
+                  .attr("d", path);
 
-            // Satate border lines
-              svg.append("path")
-                .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-                .attr("class", "state-border")
-                .attr("d", path);
-
-            // indivual states
-            var state_g = svg.append("g")
-                state_g.selectAll("path")
-                .data(topojson.feature(us, us.objects.states).features)
-                .enter().append("path")
-                .attr("class","state")
-                .on("mouseover", function(d) {
-                    console.log("State ID: "+d.id + " Amount: "+d.amount)
-                    removeBarChart()
-                    generateBarData(myMasterData, d.id);
-                    createBarChart(myBarData)
-                      })
-                .on("mouseout", function(d) {
-                    removeBarChart()
-                    generateBarData(myMasterData, null);
-                    createBarChart(myBarData)
-                })
-                .attr("fill", function(d) { return color((d.amount = losses.get(d.id))/10000000); })
-                .attr("d", path)
-                .append("title")
-                .text(function(d) { return "State ID: "+ d.id + " Amount: " + d.amount ; });
+              // indivual states
+              var state_g = svg.append("g")
+                  state_g.selectAll("path")
+                  .data(topojson.feature(us, us.objects.states).features)
+                  .enter().append("path")
+                  .attr("class","state")
+                  .on("mouseover", function(d) {
+                      console.log("State ID: "+d.id + " Amount: "+d.amount)
+                      removeBarChart()
+                      generateBarData(myMasterData, d.id);
+                      createBarChart(myBarData)
+                        })
+                  .on("mouseout", function(d) {
+                      removeBarChart()
+                      generateBarData(myMasterData, null);
+                      createBarChart(myBarData)
+                  })
+                  .attr("fill", function(d) { return color((d.amount = losses.get(d.id))/10000000); })
+                  .attr("d", path)
+                  .append("title")
+                  .text(function(d) { return "State ID: "+ d.id + " Amount: " + d.amount ; });
             }
         }
-        window.onload = loadData;
+      
+      window.onload = loadData;
   </script>
   </body>
 </html>
