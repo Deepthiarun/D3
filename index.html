@@ -24,6 +24,7 @@
       var mapFillData = d3.map();
       var minAmount, maxAmount;
       const scaleFactor = 1E6 // showing values in million
+      const format = d3.format(".3")
 
 
       function loadData()
@@ -124,6 +125,8 @@
               generateChorData(myMasterData,null)
               updateMap(null);
             })
+            .append("title")
+            .text((d)=> d.key+" - "+format(d.value/scaleFactor)+"M")
       }
 
       function removeBarChart(){
@@ -167,7 +170,7 @@
         const path = d3.geoPath();
         const mapWidth = svgWidth_chor
         const mapHeight = svgHeight_chor
-        const promises = [d3.json("https://d3js.org/us-10m.v1.json")]
+        const promises = [d3.json("https://raw.githubusercontent.com/Deepthiarun/D3/master/us-10m.v1.json")]
         var svg = d3.select("#svg-chor")
             .attr("width",mapWidth)
             .attr("height",mapHeight);
@@ -205,7 +208,6 @@
       }
       
       function updateMap(title){
-        const format = d3.format(".3")
         const path = d3.geoPath();
         var color = d3.scaleQuantize()
             .domain([minAmount,maxAmount])
