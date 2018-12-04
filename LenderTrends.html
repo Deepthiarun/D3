@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lender Trends</title>
+    </head>
+    <style type="text/css">
+
+    #nav-container {
+        display: flex;
+    }
+    .navBox {
+        width: 20%;
+        height: 20px;
+        background-color: white;
+        text-align: center;
+        color: green;
+        font-size: 20px;
+        font-weight: bold;
+        padding-bottom: 5px
+
+    }
+
+    .navBox:hover {
+        background-color: rgb(255, 190, 147);
+    }
+
+    .navBox.active-nav {
+        background-color: rgb(245, 111, 21);
+    }
+
+    #graph-container {
+        min-width: 900px;
+        min-height: 600px;
+    }
+
+    .full-page {
+        width: 100%;
+        height: 100%;
+        min-width: 1000px;
+        min-height: 700px;
+    }
+
+    #type, #percent {
+        padding: 50px 0 0 100px;
+    }
+
+    </style>
+    <script>
+    function ShowAmount(){
+        document.getElementById("graph-container").innerHTML='<object class="full-page" id="amount" type="text/html" data="Loan_Amount.html"></object>';
+        clearNav();
+        document.getElementById('nav-amount').classList.add('active-nav');
+    }
+
+    function ShowAccepted(){
+        document.getElementById("graph-container").innerHTML='<object class="full-page" id="accepted" type="text/html" data="Lender_Accepted.html"></object>';
+        clearNav();
+        document.getElementById('nav-accepted').classList.add('active-nav');
+    }
+
+    /*function ShowRejected(){
+        document.getElementById("graph-container").innerHTML='<object class="full-page" id="rejected" type="text/html" data="Lender_Rejected.html"></object>';
+        clearNav();
+        document.getElementById('nav-rejected').classList.add('active-nav');
+    }*/
+
+    function ShowLoanType(){
+        document.getElementById("graph-container").innerHTML='<object class="full-page" id="type" type="text/html" data="FixedVariable.html"></object>';
+        clearNav();
+        document.getElementById('nav-loan-type').classList.add('active-nav');
+    }
+
+    function ShowAccPercent(){
+        document.getElementById("graph-container").innerHTML='<object class="full-page" id="percent" type="text/html" data="LenderAcceptancePercentage.html"></object>';
+        clearNav();
+        document.getElementById('nav-accept-percent').classList.add('active-nav');
+    }
+
+    function clearNav (){
+        let navs = document.getElementsByClassName('navBox');
+        for(var i = 0; i < navs.length ; i++)
+        {
+            navs[i].classList.remove('active-nav');
+        }
+    }
+
+    window.onload = ShowAmount;
+    </script>
+    <body>
+        <div id='container'>
+            <div id='nav-container'>
+                <div id='nav-amount'class='navBox' onclick="ShowAmount()">Loan Amount</div>
+                <div id='nav-accepted'class='navBox' onclick="ShowAccepted()">Accepted Loans</div>
+                <!-- <div id='nav-rejected'class='navBox' onclick="ShowRejected()">Rejected Loans</div> -->
+                <div id='nav-loan-type'class='navBox' onclick="ShowLoanType()">Fixed/Variable</div>
+                <div id='nav-accept-percent'class='navBox' onclick="ShowAccPercent()">Acceptance %</div>
+            </div>
+            <div id="graph-container">
+                
+            </div>
+
+        </div>
+    </body>
+</html>
